@@ -2,10 +2,10 @@
 
 namespace Test\Query;
 
+use ArrayIterator;
 use Mockery;
 use PHPUnit_Framework_TestCase;
 use Query\Collection;
-use ArrayIterator;
 
 class CollectionTest extends PHPUnit_Framework_TestCase
 {
@@ -31,6 +31,7 @@ class CollectionTest extends PHPUnit_Framework_TestCase
         $this->mapper           = Mockery::mock('Query\Mappable');
         $this->reducer          = Mockery::mock('Query\Reducable');
         $this->filter           = Mockery::mock('Query\Filterable');
+        $this->joiner           = Mockery::mock('Query\Joinable');
         $this->iterator_factory = Mockery::mock('Query\TraversableFactory');
         $this->values           = [1, 2, 3];
         $this->mapped           = [2, 4, 6];
@@ -39,13 +40,14 @@ class CollectionTest extends PHPUnit_Framework_TestCase
         $this->initial          = 0;
         $this->callback         = function () {
         };
-        $this->iterator = new ArrayIterator($this->values);
+        $this->iterator         = new ArrayIterator($this->values);
 
         $this->collection = new Collection(
             $this->values,
             $this->mapper,
             $this->reducer,
             $this->filter,
+            $this->joiner,
             $this->iterator_factory
         );
 
@@ -56,6 +58,8 @@ class CollectionTest extends PHPUnit_Framework_TestCase
         );
 
         $this->filter->shouldReceive('filter')->with($this->iterator, $this->callback)->andReturn($this->filtered);
+
+        $this->joiner->shouldReceive('join')->with($this->iterator, $this->iterator, $this->callback, $this->callback)->andReturn($this->filtered);
 
         $this->iterator_factory->shouldReceive('make')->with($this->values)->andReturn($this->iterator);
     }
@@ -103,6 +107,15 @@ class CollectionTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($expect, $actual);
     }
 
+    public function testJoin()
+    {
+        $expect = $this->filtered;
+
+        $actual = $this->collection->join($this->values, $this->callback, $this->callback)->get();
+
+        $this->assertEquals($expect, $actual);
+    }
+
     public function testGetIteratorWithIteratorAggregate()
     {
         $expect = Mockery::mock();
@@ -115,6 +128,7 @@ class CollectionTest extends PHPUnit_Framework_TestCase
             $this->mapper,
             $this->reducer,
             $this->filter,
+            $this->joiner,
             $this->iterator_factory
         );
 
@@ -132,6 +146,7 @@ class CollectionTest extends PHPUnit_Framework_TestCase
             $this->mapper,
             $this->reducer,
             $this->filter,
+            $this->joiner,
             $this->iterator_factory
         );
 
@@ -149,6 +164,7 @@ class CollectionTest extends PHPUnit_Framework_TestCase
             $this->mapper,
             $this->reducer,
             $this->filter,
+            $this->joiner,
             $this->iterator_factory
         );
 

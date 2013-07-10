@@ -16,6 +16,8 @@ class Collection implements Set, IteratorAggregate
 
     private $filterable;
 
+    private $joinable;
+
     private $iterator_factory;
 
     public function __construct(
@@ -23,12 +25,14 @@ class Collection implements Set, IteratorAggregate
         Mappable $mappable,
         Reducable $reducable,
         Filterable $filterable,
+        Joinable $joinable,
         TraversableFactory $iterator_factory
     ) {
         $this->values           = $values;
         $this->mappable         = $mappable;
         $this->reducable        = $reducable;
         $this->filterable       = $filterable;
+        $this->joinable         = $joinable;
         $this->iterator_factory = $iterator_factory;
     }
 
@@ -44,8 +48,35 @@ class Collection implements Set, IteratorAggregate
             $this->mappable,
             $this->reducable,
             $this->filterable,
+            $this->joinable,
             $this->iterator_factory
         );
+    }
+
+    /**
+     * (PHP 5 &gt;= 5.0.0)<br/>
+     * Retrieve an external iterator
+     *
+     * @link http://php.net/manual/en/iteratoraggregate.getiterator.php
+     * @return Traversable An instance of an object implementing <b>Traversable</b> or
+     * <b>Traversable</b>
+     */
+    public function getIterator()
+    {
+        return $this->makeIterator($this->values);
+    }
+
+    public function makeIterator($array)
+    {
+        if ($array instanceof IteratorAggregate) {
+            return $array->getIterator();
+        }
+
+        if ($array instanceof Traversable) {
+            return $array;
+        }
+
+        return $this->iterator_factory->make($array);
     }
 
     /**
@@ -71,6 +102,29 @@ class Collection implements Set, IteratorAggregate
             $this->mappable,
             $this->reducable,
             $this->filterable,
+            $this->joinable,
+            $this->iterator_factory
+        );
+    }
+
+    /**
+     * @param callable $callback
+     *
+     * @return Set
+     */
+    public function join($array, callable $filter, callable $map)
+    {
+        return new Collection(
+            $this->joinable->join(
+                $this->getIterator(),
+                $this->makeIterator($array),
+                $filter,
+                $map
+            ),
+            $this->mappable,
+            $this->reducable,
+            $this->filterable,
+            $this->joinable,
             $this->iterator_factory
         );
     }
@@ -81,26 +135,5 @@ class Collection implements Set, IteratorAggregate
     public function get()
     {
         return $this->values;
-    }
-
-    /**
-     * (PHP 5 &gt;= 5.0.0)<br/>
-     * Retrieve an external iterator
-     *
-     * @link http://php.net/manual/en/iteratoraggregate.getiterator.php
-     * @return Traversable An instance of an object implementing <b>Traversable</b> or
-     * <b>Traversable</b>
-     */
-    public function getIterator()
-    {
-        if ($this->values instanceof IteratorAggregate) {
-            return $this->values->getIterator();
-        }
-
-        if ($this->values instanceof Traversable) {
-            return $this->values;
-        }
-
-        return $this->iterator_factory->make($this->values);
     }
 }
