@@ -17,14 +17,27 @@ class Joiner implements Joinable
      */
     public function join(Traversable $lefts, Traversable $rights, callable $filter, callable $map)
     {
+        $joins = [];
+
         $results = [];
 
-        foreach ($lefts as $left) {
+        foreach ($lefts as $key => $left) {
             foreach ($rights as $right) {
                 if ($filter($left, $right)) {
-                    $results[] = $map($left, $right);
+                    if (!isset($joins[$key])) {
+                        $joins[$key] = [
+                            'left' => $left,
+                            'rights' => []
+                        ];
+                    }
+
+                    $joins[$key]['rights'][] = $right;
                 }
             }
+        }
+
+        foreach ($joins as $join) {
+            $results[] = $map($join['left'], $join['rights']);
         }
 
         return $results;

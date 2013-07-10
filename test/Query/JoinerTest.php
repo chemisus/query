@@ -13,7 +13,7 @@ class JoinerTest extends PHPUnit_Framework_TestCase
     {
         $left   = [1, 2, 3];
         $right  = [2, 3, 4];
-        $expect = [4, 9];
+        $expect = [9, 14, 12];
 
         $joiner = new Joiner();
 
@@ -21,10 +21,10 @@ class JoinerTest extends PHPUnit_Framework_TestCase
             new ArrayIterator($left),
             new ArrayIterator($right),
             function ($left, $right) {
-                return $left === $right;
+                return $left < $right;
             },
             function ($left, $right) {
-                return $left * $right;
+                return $left * array_sum($right);
             }
         );
 
