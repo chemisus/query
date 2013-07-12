@@ -38,8 +38,7 @@ class CollectionTest extends PHPUnit_Framework_TestCase
         $this->reduced          = 6;
         $this->filtered         = [3];
         $this->initial          = 0;
-        $this->callback         = function () {
-        };
+        $this->callback         = [Mockery::mock(), 'test'];
         $this->iterator         = new ArrayIterator($this->values);
 
         $this->collection = new Collection(
